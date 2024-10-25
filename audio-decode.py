@@ -1,8 +1,7 @@
 import pyaudio
 import numpy as np
 from scipy.fftpack import fft
-import time
-from bit_decoder import filter_input
+from symbol_decoder import SymbolDecoder
 
 SAMPLE_RATE = 44100
 DURATION = 0.05
@@ -50,6 +49,7 @@ stream = p.open(
     frames_per_buffer=FRAME_SIZE,
 )
 
+decoder = SymbolDecoder(FRAME_PER_SYMBOL)
 preamble = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
 preamble_buffer = []
 is_preamble = False
@@ -62,7 +62,7 @@ while True:
 
     # FSK 신호 감지
     bit = detect_fsk_signal(data, SAMPLE_RATE)
-    bit = filter_input(bit)
+    bit = decoder.process(bit)
     # continue
 
     if bit is not None:
@@ -72,7 +72,6 @@ while True:
         if preamble_buffer == preamble:
             is_preamble = True
             byte_buffer = []
-            print("Preamble detected")
             continue
     if is_preamble and bit is not None:
         byte_buffer.append(bit)
