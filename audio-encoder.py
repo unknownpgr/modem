@@ -2,12 +2,12 @@ import numpy as np
 from scipy.io.wavfile import write
 
 # 기본 파라미터 설정
-sample_rate = 44100  # 샘플링 레이트
-duration = 0.05  # 각 비트의 지속 시간 (초)
-f0 = 4410  # 0에 대한 주파수 (Hz)
-f1 = 8820  # 1에 대한 주파수 (Hz)
+SAMPLE_RATE = 44100
+DURATION = 0.02
+FREQ_SPACE = 1000
+FREQ_MARK = 2000
 
-print("Sample per symbol: ", sample_rate * duration)
+print("Sample per symbol: ", SAMPLE_RATE * DURATION)
 
 
 def fsk_encode(data, sample_rate, f0, f1, duration):
@@ -32,22 +32,23 @@ def encode_data(string):
     return data
 
 
-# Preamble
-preamble = [0, 1] * 16
+data = (
+    '\n\n  "You only live once but if you do it right, once is enough." - Mae West\n\n'
+)
 
-# IMPORTANT NOTE: ASCII code of first character must be larger than 127.
-# Because if it is smaller than 127, especially when the first two bits are 01,
-# it would be recognized as a preamble.
-signal = encode_data("This is audio data encoding test.")
-data = preamble + signal
-print(len(data))
+# Generate data
+sync_signal = [0, 1] * 16
+preamble = [0, 0, 0, 1, 0, 0, 0, 1] * 2
+signal = encode_data(data)
+data = sync_signal + preamble + signal
 
-# FSK 신호 생성
-signal = fsk_encode(data, sample_rate, f0, f1, duration)
-print(len(signal) / sample_rate)
+# Generate FSK signal
+signal = fsk_encode(data, SAMPLE_RATE, FREQ_SPACE, FREQ_MARK, DURATION)
+print("Signal length: ", len(signal))
+print("Signal duration: ", len(signal) / SAMPLE_RATE)
 
-# 신호를 [-1, 1] 범위로 정규화
+# Normalize signal
 signal = np.int16(signal / np.max(np.abs(signal)) * 32767)
 
-# WAV 파일로 저장
-write("fsk_signal.wav", sample_rate, signal)
+# Save signal to a WAV file
+write("fsk_signal.wav", SAMPLE_RATE, signal)

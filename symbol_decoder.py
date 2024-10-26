@@ -1,6 +1,6 @@
 class SymbolDecoder:
 
-    def __init__(self, frame_per_symbol):
+    def __init__(self, frame_per_symbol, logging=False):
         self.frame_per_symbol = frame_per_symbol
         self.counter = 0
         self.one_counter = 0
@@ -8,19 +8,26 @@ class SymbolDecoder:
         self.none_counter = 0
         self.current_bit = None
         self.symbol_confidence = 0
+        self.logging = logging
 
     def process(self, input):
+        if self.logging:
+            if input is None:
+                print(".", end="", flush=True)
+            else:
+                print(input, end="", flush=True)
+
         # Update symbol_confidence
         if input is None:
             self.symbol_confidence -= 0
         else:
             self.symbol_confidence += 1
-        if self.symbol_confidence < 0:
-            self.symbol_confidence = 0
+        if self.symbol_confidence < 3:
+            self.symbol_confidence = 3
         if self.symbol_confidence > 10:
             self.symbol_confidence = 10
 
-        # Edge alignment
+        # Symbol edge alignment
         if self.current_bit is not input:
             if self.current_bit is None:
                 self.zero_counter = 0
@@ -43,7 +50,7 @@ class SymbolDecoder:
             self.zero_counter += 1
         self.counter += 1
 
-        # If it is symbol boundary, decide the bit and reset counters
+        # If it is symbol boundary, decide the bit and reset the counters
         if self.counter >= self.frame_per_symbol:
             self.counter -= self.frame_per_symbol
 
@@ -58,6 +65,9 @@ class SymbolDecoder:
             self.zero_counter = 0
             self.none_counter = 0
             self.current_bit = None
+
+            if self.logging:
+                print("==>", output)
 
             return output
 

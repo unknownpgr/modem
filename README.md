@@ -1,3 +1,3 @@
 # Modem
 
-FSK 방식을 이용한 간단한 모뎀을 구현한다.
+Simple FSK modem implementation in Python.
