@@ -4,36 +4,22 @@ from scipy.io.wavfile import write
 from tools.codec import Codec
 
 SAMPLE_RATE = 44100
-DURATION = 0.005
+BAUD_RATE = 200
 FREQ_SPACE = 1000
 FREQ_MARK = 2000
 
-print("Sample per symbol: ", SAMPLE_RATE * DURATION)
 
-
-def fsk_encode(data, sample_rate, f0, f1, duration):
-    t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
+def fsk_encode(data, sample_rate, f0, f1, baud_rate):
+    t = np.linspace(0, 1 / baud_rate, int(sample_rate / baud_rate), endpoint=False)
     signal = np.array([])
-    offset = 0
 
     for bit in data:
         if bit == 0:
-            signal = np.concatenate((signal, np.sin(2 * np.pi * f0 * (t + offset))))
-            offset += duration
+            signal = np.concatenate((signal, np.sin(2 * np.pi * f0 * t)))
         else:
-            signal = np.concatenate((signal, np.sin(2 * np.pi * f1 * (t + offset))))
-            offset += duration
+            signal = np.concatenate((signal, np.sin(2 * np.pi * f1 * t)))
 
     return signal
-
-
-def encode_data(string):
-    data = []
-    for char in string:
-        byte = ord(char)
-        for i in range(8):
-            data.append((byte >> i) & 1)
-    return data
 
 
 data = """\033[2J\033[H
@@ -50,7 +36,9 @@ codec = Codec()
 data = codec.encode_string(data)
 
 # Generate FSK signal
-signal = fsk_encode(data, SAMPLE_RATE, FREQ_SPACE, FREQ_MARK, DURATION)
+signal = fsk_encode(data, SAMPLE_RATE, FREQ_SPACE, FREQ_MARK, BAUD_RATE)
+
+print("Sample per symbol: ", SAMPLE_RATE / BAUD_RATE)
 print("Signal length: ", len(signal))
 print("Signal duration: ", len(signal) / SAMPLE_RATE)
 

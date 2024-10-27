@@ -1,7 +1,7 @@
 class SymbolDecoder:
 
-    def __init__(self, frame_per_symbol, logging=False):
-        self.frame_per_symbol = frame_per_symbol
+    def __init__(self, sample_per_symbol, logging=False):
+        self.sample_per_symbol = sample_per_symbol
         self.counter = 0
         self.vco_input = 1
         self.one_counter = 0
@@ -31,9 +31,9 @@ class SymbolDecoder:
                 self.current_bit = input
                 if self.logging:
                     print("◼️", end="")
-                if self.counter < self.frame_per_symbol * 0.5:
+                if self.counter < self.sample_per_symbol * 0.5:
                     self.vco_input = -0.01
-                elif self.counter > self.frame_per_symbol * 0.5:
+                elif self.counter > self.sample_per_symbol * 0.5:
                     self.vco_input = 0.01
 
         # Update counter
@@ -46,8 +46,8 @@ class SymbolDecoder:
         self.counter += 1 + self.vco_input
 
         # If it is symbol boundary, decide the bit and reset the counters
-        if self.counter >= self.frame_per_symbol:
-            self.counter -= self.frame_per_symbol
+        if self.counter >= self.sample_per_symbol:
+            self.counter -= self.sample_per_symbol
 
             if self.none_counter > max(self.one_counter, self.zero_counter):
                 output = None
