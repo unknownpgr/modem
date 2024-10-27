@@ -3,31 +3,23 @@ class SymbolDecoder:
     def __init__(self, frame_per_symbol, logging=False):
         self.frame_per_symbol = frame_per_symbol
         self.counter = 0
+        self.vco_input = 1
         self.one_counter = 0
         self.zero_counter = 0
         self.none_counter = 0
         self.current_bit = None
-        self.symbol_confidence = 0
         self.logging = logging
 
     def process(self, input):
         if self.logging:
             if input is None:
                 print(".", end="", flush=True)
+            elif input == 0:
+                print("_", end="", flush=True)
             else:
-                print(input, end="", flush=True)
+                print("-", end="", flush=True)
 
-        # Update symbol_confidence
-        if input is None:
-            self.symbol_confidence -= 0
-        else:
-            self.symbol_confidence += 1
-        if self.symbol_confidence < 3:
-            self.symbol_confidence = 3
-        if self.symbol_confidence > 10:
-            self.symbol_confidence = 10
-
-        # Symbol edge alignment
+        # Symbol edge alignment with software PLL
         if self.current_bit is not input:
             if self.current_bit is None:
                 self.zero_counter = 0
@@ -36,10 +28,13 @@ class SymbolDecoder:
                 self.counter = 0
                 self.current_bit = input
             else:
-                if self.counter < self.frame_per_symbol / 2:
-                    self.counter -= self.frame_per_symbol / self.symbol_confidence
-                else:
-                    self.counter += self.frame_per_symbol / self.symbol_confidence
+                self.current_bit = input
+                if self.logging:
+                    print("◼️", end="")
+                if self.counter < self.frame_per_symbol * 0.5:
+                    self.vco_input = -0.01
+                elif self.counter > self.frame_per_symbol * 0.5:
+                    self.vco_input = 0.01
 
         # Update counter
         if input is None:
@@ -48,7 +43,7 @@ class SymbolDecoder:
             self.one_counter += 1
         else:
             self.zero_counter += 1
-        self.counter += 1
+        self.counter += 1 + self.vco_input
 
         # If it is symbol boundary, decide the bit and reset the counters
         if self.counter >= self.frame_per_symbol:
@@ -68,6 +63,7 @@ class SymbolDecoder:
 
             if self.logging:
                 print("==>", output)
+                print(f"{self.vco_input:.2f}", end="")
 
             return output
 
