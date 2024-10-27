@@ -22,15 +22,11 @@ def encode_data(f_s, baud_rate, bits):
 # Filter design
 sample_rate = 44100
 f_select = 1000
-q_factor = 2
 fir_coeff, numtaps, Q = FilterDesigner.design_filter_with_numtaps(
     sample_rate, f_select, 127
 )
 print(f"Number of taps: {numtaps}")
 print(f"Q factor: {Q}")
-print("FIR coefficients: ")
-print("[" + ",".join([str(x) for x in fir_coeff]) + "]")
-
 
 # Frequency response
 w, h = freqz(fir_coeff, worN=8000, fs=sample_rate)
@@ -38,8 +34,8 @@ h = h[w <= f_select * 4]
 w = w[w <= f_select * 4]
 
 # Actual filter test
-data = [0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1]
-encoded = encode_data(sample_rate, 300, data)
+data = [0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1]
+encoded = encode_data(sample_rate, 200, data)
 signal = (
     np.sin(2 * np.pi * f_select / sample_rate * np.arange(0, len(encoded))) * encoded
 )
@@ -52,25 +48,28 @@ envelope = get_envelope(filtered_data, numtaps)
 decoded = envelope / np.max(envelope) > 0.5
 
 # Plot
-fig, axs = plt.subplots(2, figsize=(10, 10))
-axs[0].plot(w, 20 * np.log10(abs(h)))
-axs[0].set_title("Frequency response")
-axs[0].set_xlabel("Frequency [Hz]")
-axs[0].set_ylabel("Amplitude [dB]")
-axs[0].set_xlim([0, min(f_select * 4, sample_rate / 2)])
-axs[0].grid()
+plt.plot(w, 20 * np.log10(abs(h)))
+plt.title("Frequency Response")
+plt.xlabel("Frequency [Hz]")
+plt.ylabel("Amplitude [dB]")
+plt.savefig("graph-01-frequency-response.png")
+plt.close()
 
-axs[1].plot(sample_data, label="Input")
-axs[1].plot(filtered_data, label="Output")
-axs[1].plot(encoded + 1, label="Encoded")
-axs[1].plot(envelope, label="Envelope")
-axs[1].plot(decoded, label="Decoded")
-axs[1].set_title("Filter test")
-axs[1].set_xlabel("Sample")
-axs[1].set_ylabel("Amplitude")
-axs[1].legend()
-axs[1].grid()
+plt.plot(fir_coeff)
+plt.title("Filter Coefficients")
+plt.xlabel("Samples")
+plt.ylabel("Amplitude")
+plt.savefig("graph-02-filter-coefficients.png")
+plt.close()
 
-
-plt.tight_layout()
-plt.show()
+t = np.linspace(0, len(sample_data) * 1000 / sample_rate, len(sample_data))
+plt.plot(t, sample_data, label="Signal", color="orange", linewidth=0.5)
+plt.plot(t, filtered_data, label="Filtered", color="red")
+plt.plot(t, envelope, label="Envelope", color="green")
+plt.plot(t, decoded - 1, label="Output", color="blue")
+plt.plot(t, encoded + 1, label="Ground Truth", color="black")
+plt.title("Filter Test")
+plt.xlabel("Time [ms]")
+plt.ylabel("Amplitude")
+plt.legend()
+plt.savefig("graph-03-filter-test.png")
