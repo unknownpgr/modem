@@ -1,6 +1,8 @@
+import sys
+
 import numpy as np
 import pyaudio
-import sys
+
 from tools.codec import Codec
 from tools.envelop_detector import EnvelopeDetector
 from tools.frequency_detector import FrequencyDetector
