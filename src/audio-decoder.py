@@ -134,7 +134,7 @@ FREQ_MARK = 8000
 FIR_SIZE = 45
 FIR_BANDWIDTH = 50
 ENVF_SAMPLES = 50
-BITF_SHIFT_RATIO = 1 / 20
+BITF_SHIFT_RATIO = 1 / 40
 
 src = AudioSource()
 iirf = IirFilter(cutoff_freq=1, sample_rate=SAMPLE_RATE)
