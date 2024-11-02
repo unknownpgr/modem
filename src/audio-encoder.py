@@ -1,6 +1,8 @@
+import os
+
 import numpy as np
 from scipy.io.wavfile import write
-import os
+
 from codec import Codec
 
 SAMPLE_RATE = 44100
@@ -55,7 +57,7 @@ data = """\033[2J\033[H
 
 # Generate data
 codec = Codec()
-data = codec.encode_string(data)
+data = codec.encode(data)
 print("".join(str(bit) for bit in data))
 
 # Generate FSK signal

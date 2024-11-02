@@ -1,12 +1,13 @@
+import sys
+
 import numpy as np
 import pyaudio
 from scipy import signal
+
 from codec import Codec
-import sys
 
 
 class AudioSource:
-
     def __init__(self, sample_rate=44100):
         self.p = pyaudio.PyAudio()
         self.stream = self.p.open(
@@ -28,7 +29,6 @@ class AudioSource:
 
 
 class FirFilter:
-
     def __init__(self, cutoff_freq, num_taps, sample_rate=44100, bandwidth=50):
         nyquist = sample_rate / 2
         low_cutoff = (cutoff_freq - bandwidth / 2) / nyquist
@@ -48,7 +48,6 @@ class FirFilter:
 
 
 class EnvelopeFilter:
-
     def __init__(self, samples=50):
         self.buffer = np.zeros(samples)
 
@@ -62,7 +61,6 @@ class EnvelopeFilter:
 
 
 class IirFilter:
-
     def __init__(self, cutoff_freq, sample_rate=44100):
         self.const = 1 - 2 * np.pi * cutoff_freq / sample_rate
         self.iir = 0
@@ -76,7 +74,6 @@ class IirFilter:
 
 
 class BitFilter:
-
     def __init__(self, baud_rate, shift_ratio=1 / 20, sample_rate=44100):
         self.baud_rate = baud_rate
         self.sample_rate = sample_rate
