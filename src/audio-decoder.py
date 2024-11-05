@@ -1,10 +1,13 @@
 import sys
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pyaudio
 from scipy import signal
 
 from codec import Codec
+
+# Define filters
 
 
 class AudioSource:
@@ -123,15 +126,18 @@ class BitFilter:
         return output_bit
 
 
+# Define parameters
+
 SAMPLE_RATE = 44100
 BAUD_RATE = 1000
-
 FREQ_SPACE = 6500
 FREQ_MARK = 8000
 FIR_SIZE = 45
 FIR_BANDWIDTH = 50
 ENVF_SAMPLES = 50
 BITF_SHIFT_RATIO = 1 / 40
+
+ENABLE_PLOT = False
 
 src = AudioSource()
 iirf = IirFilter(cutoff_freq=1, sample_rate=SAMPLE_RATE)
@@ -158,22 +164,48 @@ bitf = BitFilter(
 codec = Codec()
 mag = 0
 
+raw_signals = []
+env_marks = []
+env_spaces = []
+raw_bits = []
+decoded_bits = []
+
 try:
     while True:
-        audio = src.read() / max(mag, 0.1)
-        mag = iirf.filter(abs(audio))
-
-        filter_mark = fir_mark.filter(audio)
-        filter_space = fir_space.filter(audio)
-
+        raw_signal = src.read()
+        raw_signal /= max(mag, 0.1)
+        mag = iirf.filter(abs(raw_signal))
+        filter_mark = fir_mark.filter(raw_signal)
+        filter_space = fir_space.filter(raw_signal)
         env_mark = envf_mark.filter(filter_mark)
         env_space = envf_space.filter(filter_space)
-
         bit = int(env_mark > env_space)
         output_bit = bitf.filter(bit)
         byte = codec.decode(output_bit)
         if byte != None:
             sys.stdout.buffer.write(byte)
             sys.stdout.buffer.flush()
+
+        if ENABLE_PLOT:
+            raw_signals.append(raw_signal)
+            env_marks.append(env_mark)
+            env_spaces.append(env_space)
+            raw_bits.append(bit)
+            if output_bit != None:
+                decoded_bits.append(output_bit)
+            else:
+                decoded_bits.append(-0.1)
+
 except KeyboardInterrupt:
     pass
+
+src.close()
+
+# Plot the signals
+if ENABLE_PLOT:
+    plt.plot(raw_signals, label="Raw Signal")
+    plt.plot(env_marks, label="Mark")
+    plt.plot(env_spaces, label="Space")
+    plt.plot(raw_bits, label="Raw Bits")
+    plt.plot(decoded_bits, label="Decoded Bits")
+    plt.show()
