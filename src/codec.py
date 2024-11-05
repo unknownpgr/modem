@@ -350,7 +350,7 @@ class Encoding8b10b:
             number = (number << 1) | bit
         return number
 
-    def encode(self, data: str | bytes | bytearray) -> list[int]:
+    def encode(self, data):
         if isinstance(data, str):
             data = data.encode("utf-8")
         bits = []
@@ -390,7 +390,7 @@ class Codec:
     def __add_preamble(self, bits):
         return [0, 1] * self.sync_length + self.preamble + bits
 
-    def encode(self, data: str | bytes | bytearray) -> list[int]:
+    def encode(self, data):
         data = self.encoding.encode(data)
         return self.__add_preamble(data)
 
